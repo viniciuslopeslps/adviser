@@ -1,6 +1,6 @@
 const PORT = 3000;
 const express = require("express");
-const request = require('request');
+const request = require('request-promise');
 const moment = require('moment');
 
 const TOKEN = "cd004f4c385c06e11ed3a44a7aae9acc";
@@ -13,7 +13,13 @@ const GENRES_MOVIES_URL = "https://api.themoviedb.org/3/discover/movie?api_key="
 
 const CITIES_STATE = "https://api-content.ingresso.com/v0/states/";
 const MOVIES_CITIES = "https://api-content.ingresso.com/v0/events/city/"
+
 const app = express();
+app.set('view engine', 'ejs');
+
+app.set('views', './app/views');
+
+app.use('/public', express.static(__dirname + '/public'));
 
 app.get('/genres', (req, res) => {
 
@@ -77,6 +83,67 @@ app.get('/movies/:cityId', (req, res) => {
     });
 });
 
+
+function generos() {
+    return request(GENRES_URL);
+}
+
+app.get('/', (req, res) => {
+    generos()
+        .then(genres => {
+            request("https://api-content.ingresso.com/v0/states", (error, response, body) => {
+                if (error) {
+                    res.status(500);
+                    return res.json({
+                        message: "Ops! Something is not ok!"
+                    });
+                }
+
+                let cities = [];
+                let states = JSON.parse(body);
+                states.forEach(state => {
+                    state.cities.forEach(element => {
+                        cities.push({
+                            "id": element.id,
+                            "urlKey": element.urlKey,
+                            "name": element.name,
+                        })
+                    });
+                });
+                res.render('index', { genres: JSON.parse(genres).genres, cities: cities });
+            });
+        })
+});
+
+
+app.get('/advise', (req, res) => {
+    const cityId = req.query.cityId;
+
+    request("https://api-content.ingresso.com/v0/events/city/"+cityId, (error, response, body) => {
+        if (error) {
+            res.status(500);
+            return res.json({
+                message: "Ops! Something is not ok!"
+            });
+        }
+
+        const genre = req.query.genre;
+        let movies = [];
+        let items = JSON.parse(body).items;
+
+        items.forEach(state => {
+            if(state.genres.indexOf(genre) !== -1){
+                movies.push({
+                    "title": state.title,
+                    "city": state.city,
+                    "id": state.id
+                });
+            }
+        });
+        res.render('movies', { movies: movies});
+    });
+});
+
 app.listen(PORT, () => {
-    console.log(`Server started on port` + port);
+    console.log(`Server started on port` + PORT);
 });

@@ -9,8 +9,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "async-request": "^1.2.0",
+    "ejs": "^2.6.1",
     "express": "^4.16.3",
     "moment": "^2.22.2",
-    "request": "^2.88.0"
+    "request": "^2.88.0",
+    "request-promise": "^4.2.2"
   }
 }

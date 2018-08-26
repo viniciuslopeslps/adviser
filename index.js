@@ -129,7 +129,7 @@ app.get('/advise', (req, res) => {
 
         const genre = req.query.genre;
         let movies = [];
-        let items = JSON.parse(body).items;
+        let items = JSON.parse(body);
 
         items.forEach(state => {
             if(state.genres.indexOf(genre) !== -1){
